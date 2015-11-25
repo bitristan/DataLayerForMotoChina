@@ -41,7 +41,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.data.FreezableUtils;
 import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataApi.DataItemResult;
@@ -58,10 +57,11 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Iterator;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -214,10 +214,13 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     }
 
     @Override //DataListener
-    public void onDataChanged(DataEventBuffer dataEvents) {
+    public void onDataChanged(final DataEventBuffer dataEvents) {
         LOGD(TAG, "onDataChanged: " + dataEvents);
-        final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
-        dataEvents.close();
+        final ArrayList<DataEvent> events = new ArrayList<DataEvent>();
+        for (DataEvent event : dataEvents) {
+            events.add(event.freeze());
+        }
+        dataEvents.release();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
